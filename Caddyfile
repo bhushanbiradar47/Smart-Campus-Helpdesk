@@ -1,0 +1,10 @@
+:80 {
+    @studentForm path /form/*
+    handle @studentForm {
+        reverse_proxy n8n:5678
+    }
+
+    handle {
+        respond "Not Found" 404
+    }
+}

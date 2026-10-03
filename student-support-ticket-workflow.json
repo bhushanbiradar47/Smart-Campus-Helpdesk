@@ -1,0 +1,271 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Campus Complaint Helpdesk",
+        "formDescription": "Please feel free to raise your complaints through this form.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Student Name "
+            },
+            {
+              "fieldLabel": "Student Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Complaint Category",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Classroom/Lab"
+                  },
+                  {
+                    "option": "Wifi"
+                  },
+                  {
+                    "option": "Maintenance"
+                  },
+                  {
+                    "option": "Hostel"
+                  },
+                  {
+                    "option": "Canteen"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Complaint Description",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f70d698d-df75-4189-93ff-4caf972513df",
+      "name": "On form submission"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => {\n  // Use item.json.body if you're on a Webhook node\n  const data = item.json.body ?? item.json;\n\n  const getField = (...names) => {\n    const key = Object.keys(data).find(k =>\n      names.includes(k.toLowerCase().replace(/[^a-z0-9]/g, \"\"))\n    );\n    return key ? String(data[key] ?? \"\").trim() : \"\";\n  };\n\n  const studentName = getField(\"studentname\", \"name\");\n  const studentEmail = getField(\"studentemail\", \"email\");\n  const category = getField(\"complaintcategory\", \"category\");\n  const description = getField(\"complaintdescription\", \"description\", \"complaint\");\n\n  const text = `${category} ${description}`.toLowerCase();\n\n  // Department (first match wins, so keep the most specific rules first)\n  let department = \"Campus Administration\";\n  if (/\\bwi-?fi\\b|\\binternet\\b|\\bnetwork\\b/.test(text)) {\n    department = \"IT Support\";\n  } else if (/\\bclassroom\\b|\\bprojector\\b|\\bdesk\\b|\\blecture\\b/.test(text)) {\n    department = \"Academic Facilities\";\n  } else if (/\\bhostel\\b|\\bdorm\\b|\\broom\\b|water supply/.test(text)) {\n    department = \"Hostel Management\";\n  } else if (/maintenance|repair|plumbing|electric|washroom|toilet/.test(text)) {\n    department = \"Maintenance Team\";\n  }\n\n  // Priority\n  let priority = \"Medium\";\n  if (/\\bfire\\b|smoke|emergency|exposed wire|electric shock/.test(text)) {\n    priority = \"Critical\";\n  } else if (/urgent|not working|outage|leak|unsafe/.test(text)) {\n    priority = \"High\";\n  } else if (/suggestion|feedback|request/.test(text)) {\n    priority = \"Low\";\n  }\n\n  const valid = Boolean(studentEmail && description);\n\n  return {\n    json: {\n      ticketId: `SC-${Date.now()}-${String(index + 1).padStart(3, \"0\")}`,\n      studentName,\n      studentEmail,\n      category,\n      description,\n      department,\n      priority,\n      status: valid ? \"Open\" : \"Invalid\",\n      submittedAt: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "564f7bca-49b5-4568-8145-4fbd36d2e255",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1CI03AJPfb0MlXXjTF6IWiiP7nAuq_A_7KfOskeETS0k",
+          "mode": "list",
+          "cachedResultName": "Smart Campus Helpdesk",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CI03AJPfb0MlXXjTF6IWiiP7nAuq_A_7KfOskeETS0k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CI03AJPfb0MlXXjTF6IWiiP7nAuq_A_7KfOskeETS0k/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ticket ID": "={{ $json.ticketId }}",
+            "Student Name": "={{ $json.studentName }}",
+            "Student Email": "={{ $json.studentEmail }}",
+            "Category": "={{ $json.category }}",
+            "Description": "={{ $json.description }}",
+            "Department": "={{ $json.department }}",
+            "Priority": "={{ $json.priority }}",
+            "Status": "={{ $json.status }}",
+            "Submitted At": "={{ $json.submittedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Student Name",
+              "displayName": "Student Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Student Email",
+              "displayName": "Student Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Department",
+              "displayName": "Department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Submitted At",
+              "displayName": "Submitted At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "7be4bd77-32c5-4622-8624-aa92201ef34f",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json['Student Email'] }}",
+        "subject": "=Student Ticket Confirmation-{{ $json['Ticket ID'] }}",
+        "emailType": "text",
+        "message": "=Hello {{$('Code in JavaScript').item.json.studentName}},  Your student support ticket has been submitted successfully.  \nTicket ID: {{$('Code in JavaScript').item.json.ticketId}} \nCategory: {{$('Code in JavaScript').item.json.category}}\nDepartment: {{$('Code in JavaScript').item.json.department}} \nPriority: {{$('Code in JavaScript').item.json.priority}} \nStatus: {{$('Code in JavaScript').item.json.status}} \nDescription: {{$('Code in JavaScript').item.json.description}}  \nOur team will review your request. Please keep your ticket ID for future reference. \nThank you, \nStudent Support Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "84b2fc30-aa67-4310-ab30-b7ac30cea791",
+      "name": "Send a message"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

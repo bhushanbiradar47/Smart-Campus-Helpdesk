@@ -1,0 +1,22 @@
+# Secrets and local configuration
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+
+# n8n local data / databases
+n8n_data/
+.n8n/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and local runtime files
+*.log
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
